@@ -190,7 +190,7 @@ jobs:
           done
 
   select-tests:
-    needs: pre-commit
+    # needs: pre-commit
     runs-on: linux-amd64-cpu-8-hk
     container:
       image: quay.io/ascend-ci/vllm-ascend:lint
@@ -327,7 +327,7 @@ jobs:
 
   run-selected-tests:
     needs:
-      - pre-commit
+      # - pre-commit
       - select-tests
       - ensure-csrc-cache
     if: >-
@@ -339,6 +339,7 @@ jobs:
         needs.ensure-csrc-cache.result == 'success'
       }}
     strategy:
+      fail-fast: false
       matrix:
         vllm_version:
           - ${{ needs.pre-commit.outputs.release_tag }}
@@ -487,13 +488,14 @@ jobs:
           echo "select-tests: ${SELECT_TESTS_RESULT}"
           echo "has_tests: ${HAS_TESTS}"
 
-          if [ "${PRE_COMMIT_RESULT}" != "success" ]; then
-            echo "::error::pre-commit did not succeed (result: ${PRE_COMMIT_RESULT})"
-            exit 1
-          fi
 
           if [ "${SELECT_TESTS_RESULT}" != "success" ]; then
             echo "::error::select-tests did not succeed (result: ${SELECT_TESTS_RESULT})"
+            exit 1
+          fi
+
+          if [ "${PRE_COMMIT_RESULT}" != "success" ]; then
+            echo "::error::pre-commit did not succeed (result: ${PRE_COMMIT_RESULT})"
             exit 1
           fi
 
